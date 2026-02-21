@@ -7,20 +7,21 @@ export const createOrGetConversation = mutation({
     userId2: v.id("users"),
   },
   async handler(ctx, args) {
-    const existing = await ctx.db
+    const conversations = await ctx.db
       .query("conversations")
+      .withIndex("by_participants", (q) =>
+        q.eq("participants", [args.userId1, args.userId2])
+      )
       .collect();
 
-    const found = existing.find((conv) =>
-      conv.participants.length === 2 &&
-      conv.participants.includes(args.userId1) &&
-      conv.participants.includes(args.userId2)
-    );
+    if (conversations.length > 0) {
+      return conversations[0]._id;
+    }
 
-    if (found) return found._id;
+    const participants = [args.userId1, args.userId2].sort();
 
     return await ctx.db.insert("conversations", {
-      participants: [args.userId1, args.userId2],
+      participants,
       isGroup: false,
     });
   },
@@ -29,9 +30,7 @@ export const createOrGetConversation = mutation({
 export const getUserConversations = query({
   args: { userId: v.id("users") },
   async handler(ctx, args) {
-    const conversations = await ctx.db
-      .query("conversations")
-      .collect();
+    const conversations = await ctx.db.query("conversations").collect();
 
     return conversations.filter((conv) =>
       conv.participants.includes(args.userId)

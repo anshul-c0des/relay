@@ -16,4 +16,12 @@ export default defineSchema({
     participants: v.array(v.id("users")),
     isGroup: v.boolean(),
   }).index("by_participants", ["participants"]),
+
+  messages: defineTable({
+    conversationId: v.id("conversations"),
+    senderId: v.id("users"),
+    content: v.string(),
+    createdAt: v.number(),
+  }).index("by_conversation", ["conversationId"])
+    .index("by_conversation_createdAt", ["conversationId", "createdAt"]),
 });

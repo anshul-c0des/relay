@@ -18,7 +18,7 @@ export const syncUser = mutation({
       return existing._id;
     }
 
-    return await ctx.db.insert("users", args);
+    return await ctx.db.insert("users", {...args, lastSeen: Date.now()});
   },
 });
 
@@ -54,5 +54,14 @@ export const getUsers = query({
           ? u.name.toLowerCase().includes(args.search.toLowerCase())
           : true
       );
+  },
+});
+
+export const updateLastSeen = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    await ctx.db.patch(userId, {
+      lastSeen: Date.now(),
+    });
   },
 });

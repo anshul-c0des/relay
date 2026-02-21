@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatTimestamp } from "@/lib/timeStamps";
 
 export function SidebarContent() {
   const { user } = useUser();
@@ -16,7 +17,7 @@ export function SidebarContent() {
   const users = useQuery(
     api.users.getUsers,
     user ? { clerkId: user.id, search } : "skip"
-  );
+  ) ?? [];
 
   const currentUser = useQuery(
     api.users.getCurrentUser,
@@ -27,6 +28,9 @@ export function SidebarContent() {
     api.conversations.createOrGetConversation
   );
 
+  const isOnline = (u: typeof users[number]) =>
+    u.lastSeen ? Date.now() - u.lastSeen < 500 : false;
+
   if (!users || !currentUser) {
     return (
       <div className="p-4 space-y-4">
@@ -35,6 +39,7 @@ export function SidebarContent() {
       </div>
     );
   }
+
 
   return (
     <div className="flex flex-col h-full">
@@ -75,7 +80,7 @@ export function SidebarContent() {
 
                 router.push(`/chat/${conversationId}`);
               }}
-              className="flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-muted transition"
+              className="flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-muted transition relative"
             >
               <img
                 src={u.imageUrl}
@@ -84,10 +89,16 @@ export function SidebarContent() {
               />
               <div>
                 <p className="font-medium">{u.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {u.email}
-                </p>
+                <p className="text-xs text-muted-foreground">{u.email}</p>
               </div>
+              {isOnline(u) && (
+                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
+              )}
+              {!isOnline(u) && (
+                <p className="text-xs text-muted-foreground">
+                  Last seen {formatTimestamp(u.lastSeen)}
+                </p>
+              )}
             </button>
           ))
         )}

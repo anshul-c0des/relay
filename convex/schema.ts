@@ -7,6 +7,7 @@ export default defineSchema({
     email: v.string(),
     name: v.string(),
     imageUrl: v.string(),
+    lastSeen: v.number(),
   })
     .index("by_clerkId", ["clerkId"])
     .index("by_email", ["email"])

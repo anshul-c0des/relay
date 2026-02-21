@@ -1,12 +1,40 @@
 "use client";
 
 import { SidebarContent } from "@/components/chat/SidebarContent";
+import { useEffect } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useUser } from "@clerk/nextjs";
 
 export default function ChatLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+    const { user } = useUser();
+
+const currentUser = useQuery(
+  api.users.getCurrentUser,
+  user ? { clerkId: user.id } : "skip"
+);
+
+const updateLastSeen = useMutation(api.users.updateLastSeen);
+
+useEffect(() => {
+  if (!currentUser) return;
+
+  // Immediately mark active
+  updateLastSeen({ userId: currentUser._id });
+
+  // Heartbeat every 15 seconds
+  const interval = setInterval(() => {
+    updateLastSeen({ userId: currentUser._id });
+  }, 15000);
+
+  return () => clearInterval(interval);
+}, [currentUser, updateLastSeen]);
+
+
   return (
     <div className="h-screen flex flex-col md:flex-row">
       {/* Desktop Sidebar */}

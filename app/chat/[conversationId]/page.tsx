@@ -23,6 +23,8 @@ export default function ConversationPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [hasNewMessages, setHasNewMessages] = useState(false);
+  const [reactionMessageId, setReactionMessageId] =
+    useState<Id<"messages"> | null>(null);
 
   const currentUser = useQuery(
     api.users.getCurrentUser,
@@ -41,7 +43,7 @@ export default function ConversationPage() {
     ) ?? {};
 
   const toggleReaction = useMutation(api.reactions.toggleReaction);
-
+  const softDeleteMessage = useMutation(api.messages.softDeleteMessage);
   const sendMessage = useMutation(api.messages.sendMessage);
   const sendTyping = useMutation(api.typing.setTyping);
 
@@ -134,45 +136,67 @@ export default function ConversationPage() {
               className={`flex flex-col relative ${isOwn ? "items-end" : "items-start"}`}
             >
               <div
-                className={`max-w-[75%] group rounded-lg px-4 py-2 text-sm relative ${
+                className={`max-w-[75%] rounded-lg px-4 py-2 text-sm relative ${
                   isOwn ? "bg-primary text-primary-foreground" : "bg-muted"
-                }`}
+                } ${msg.isDeleted ? "italic text-gray-400" : ""}`}
+                onClick={() =>
+                  setReactionMessageId((prev) =>
+                    prev === msg._id ? null : msg._id
+                  )
+                }
               >
-                {msg.content}
+                {msg.isDeleted ? "This message was deleted" : msg.content}
 
-                {/* Reactions (hover) */}
-                <div
-                  className={`absolute top-0 flex space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 ${
-                    isOwn ? "right-full mr-2" : "left-full ml-2"
-                  }`}
-                >
-                  {["👍", "❤️", "😂", "😮", "😢"].map((emoji) => {
-                    const hasReacted = msgReactions.find(
-                      (r) => r.emoji === emoji
-                    );
-                    return (
+                {/* Reactions bar */}
+                {reactionMessageId === msg._id && !msg.isDeleted && (
+                  <div
+                    className={`absolute top-0 flex space-x-1 z-10 ${
+                      isOwn ? "right-full mr-2" : "left-full ml-2"
+                    }`}
+                  >
+                    {["👍", "❤️", "😂", "😮", "😢"].map((emoji) => {
+                      const hasReacted = msgReactions.find(
+                        (r) => r.emoji === emoji
+                      );
+                      return (
+                        <button
+                          key={emoji}
+                          className={`text-sm px-1 rounded ${
+                            hasReacted ? "bg-gray-300" : "bg-white"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation(); // prevent closing menu
+                            toggleReaction({
+                              messageId: msg._id,
+                              userId: currentUser._id,
+                              emoji,
+                            });
+                          }}
+                        >
+                          {emoji} {hasReacted?.count || ""}
+                        </button>
+                      );
+                    })}
+
+                    {isOwn && (
                       <button
-                        key={emoji}
-                        className={`text-sm px-1 rounded ${
-                          hasReacted ? "bg-gray-300" : "bg-white"
-                        }`}
-                        onClick={() =>
-                          toggleReaction({
-                            messageId: msg._id,
-                            userId: currentUser._id,
-                            emoji,
-                          })
-                        }
+                        className="text-sm px-2 rounded bg-red-100 text-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent closing reaction menu
+                          softDeleteMessage({
+                            messageId: msg._id as Id<"messages">,
+                          });
+                        }}
                       >
-                        {emoji} {hasReacted?.count || ""}
+                        🗑 Delete
                       </button>
-                    );
-                  })}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Existing reactions */}
-              {msgReactions.length > 0 && (
+              {msgReactions.length > 0 && !msg.isDeleted && (
                 <div
                   className={`flex space-x-1 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}
                 >

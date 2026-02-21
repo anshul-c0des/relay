@@ -11,6 +11,7 @@ export const sendMessage = mutation({
     return await ctx.db.insert("messages", {
       ...args,
       createdAt: Date.now(),
+      isDeleted: false
     });
   },
 });
@@ -100,5 +101,14 @@ export const getUnreadCounts = query({
     }
 
     return result;
+  },
+});
+
+export const softDeleteMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+  },
+  handler: async ({ db }, { messageId }) => {
+    await db.patch(messageId, { isDeleted: true });
   },
 });

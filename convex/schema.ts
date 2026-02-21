@@ -11,4 +11,9 @@ export default defineSchema({
     .index("by_clerkId", ["clerkId"])
     .index("by_email", ["email"])
     .index("by_name", ["name"]),
+
+  conversations: defineTable({
+    participants: v.array(v.id("users")),
+    isGroup: v.boolean(),
+  }).index("by_participants", ["participants"]),
 });

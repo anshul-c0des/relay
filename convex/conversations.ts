@@ -6,23 +6,23 @@ export const createOrGetConversation = mutation({
     userId1: v.id("users"),
     userId2: v.id("users"),
   },
-  async handler(ctx, args) {
-    const conversations = await ctx.db
+  async handler(ctx, {userId1, userId2}) {
+    const sorted = [userId1, userId2].sort();
+    const conversationKey = `${sorted[0]}_${sorted[1]}`;
+
+    const existing = await ctx.db
       .query("conversations")
-      .withIndex("by_participants", (q) =>
-        q.eq("participants", [args.userId1, args.userId2])
+      .withIndex("by_conversationKey", (q) =>
+        q.eq("conversationKey", conversationKey)
       )
-      .collect();
+      .unique();
 
-    if (conversations.length > 0) {
-      return conversations[0]._id;
-    }
-
-    const participants = [args.userId1, args.userId2].sort();
+      if (existing) return existing._id;
 
     return await ctx.db.insert("conversations", {
-      participants,
+      participants: sorted,
       isGroup: false,
+      conversationKey,
     });
   },
 });

@@ -29,3 +29,63 @@ export const getMessages = query({
       .collect();
   },
 });
+
+export const markRead = mutation({
+  args: { conversationId: v.id("conversations"), userId: v.id("users") },
+  handler: async (ctx, { conversationId, userId }) => {
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversation_createdAt", (q) => q.eq("conversationId", conversationId))
+      .collect();
+
+    if (messages.length === 0) return;
+
+    const lastMessage = messages[messages.length - 1];
+
+    const existing = await ctx.db
+      .query("messageReads")
+      .withIndex("by_user_conversation", (q) =>
+        q.eq("userId", userId).eq("conversationId", conversationId)
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { lastReadMessage: lastMessage._id });
+    } else {
+      await ctx.db.insert("messageReads", {
+        userId,
+        conversationId,
+        lastReadMessage: lastMessage._id,
+      });
+    }
+  },
+});
+
+export const getUnreadCounts = query({
+    args: { userId: v.id("users") },
+    handler: async (ctx, { userId }) => {
+      const reads = await ctx.db.query("messageReads").withIndex("by_user_conversation", (q) =>
+        q.eq("userId", userId)
+      ).collect();
+  
+      const conversations = await ctx.db.query("conversations").collect();
+  
+      const result: Record<string, number> = {};
+  
+      for (const conv of conversations) {
+        const lastRead = reads.find((r) => r.conversationId === conv._id)?.lastReadMessage;
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_conversation_createdAt", (q) => q.eq("conversationId", conv._id))
+          .collect();
+
+      const unreadCount = messages.filter(
+        (m) => m.senderId !== userId && (!lastRead || m._id.toString() > lastRead.toString())
+      ).length;
+
+      result[conv.conversationKey] = unreadCount;
+        }
+    
+        return result;
+    },
+  });

@@ -16,7 +16,8 @@ export default defineSchema({
   conversations: defineTable({
     participants: v.array(v.id("users")),
     isGroup: v.boolean(),
-  }).index("by_participants", ["participants"]),
+    conversationKey: v.string(), 
+  }).index("by_conversationKey", ["conversationKey"]),
 
   messages: defineTable({
     conversationId: v.id("conversations"),
@@ -25,4 +26,19 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_conversation", ["conversationId"])
     .index("by_conversation_createdAt", ["conversationId", "createdAt"]),
+
+  typing: defineTable({
+      conversationId: v.id("conversations"),
+      userId: v.id("users"),
+      lastTyped: v.number(),
+  }).index("by_conversation", ["conversationId"])
+    .index("by_conversation_user", ["conversationId", "userId"]),
+
+  messageReads: defineTable({
+    userId: v.id("users"),
+    conversationId: v.id("conversations"),
+    lastReadMessage: v.id("messages"),
+  })
+    .index("by_user_conversation", ["userId", "conversationId"])
+    .index("by_conversation", ["conversationId"])
 });

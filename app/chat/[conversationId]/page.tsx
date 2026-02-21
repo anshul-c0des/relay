@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Id } from "@/convex/_generated/dataModel";
 import { formatTimestamp } from "@/lib/timeStamps";
+import { useDebouncedCallback } from "use-debounce";
 
 export default function ConversationPage() {
   const { user } = useUser();
   const params = useParams();
   const conversationId = params.conversationId as Id<"conversations">;
   const router = useRouter();
+  const markRead = useMutation(api.messages.markRead);
 
   const [message, setMessage] = useState("");
 
@@ -23,12 +25,36 @@ export default function ConversationPage() {
     user ? { clerkId: user.id } : "skip"
   );
 
+
   const messages = useQuery(
     api.messages.getMessages,
     conversationId ? { conversationId } : "skip"
   );
 
   const sendMessage = useMutation(api.messages.sendMessage);
+
+  const sendTyping = useMutation(api.typing.setTyping);
+
+  useEffect(() => {
+    if (!conversationId || !currentUser) return;
+    markRead({ conversationId, userId: currentUser._id });
+  }, [conversationId, currentUser, markRead]);
+
+  const debouncedTyping = useDebouncedCallback(() => {
+    if (!currentUser) return;
+    sendTyping({ conversationId, userId: currentUser._id });
+  }, 300);
+
+  const typingUsers =
+  useQuery(
+    api.typing.getTypingUsers,
+    currentUser && conversationId
+      ? {
+          conversationId,
+          currentUserId: currentUser._id,
+        }
+      : "skip"
+  ) ?? [];
 
   if (!currentUser || !messages) {
     return <div className="p-4">Loading...</div>;
@@ -72,13 +98,23 @@ export default function ConversationPage() {
         })}
       </div>
 
+      {typingUsers.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {typingUsers.map((u) => u.name).join(", ")} is typing…
+        </p>
+      )}
+
       {/* Input */}
       <div className="border-t p-4 flex gap-2">
         <Input
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            debouncedTyping();
+          }}
           placeholder="Type a message..."
         />
+
         <Button
           onClick={async () => {
             if (!message.trim()) return;

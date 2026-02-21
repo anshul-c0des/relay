@@ -35,7 +35,10 @@ export const markRead = mutation({
   handler: async (ctx, { conversationId, userId }) => {
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_conversation_createdAt", (q) => q.eq("conversationId", conversationId))
+      .withIndex("by_conversation_createdAt", (q) =>
+        q.eq("conversationId", conversationId)
+      )
+      .order("asc")
       .collect();
 
     if (messages.length === 0) return;
@@ -62,30 +65,40 @@ export const markRead = mutation({
 });
 
 export const getUnreadCounts = query({
-    args: { userId: v.id("users") },
-    handler: async (ctx, { userId }) => {
-      const reads = await ctx.db.query("messageReads").withIndex("by_user_conversation", (q) =>
-        q.eq("userId", userId)
-      ).collect();
-  
-      const conversations = await ctx.db.query("conversations").collect();
-  
-      const result: Record<string, number> = {};
-  
-      for (const conv of conversations) {
-        const lastRead = reads.find((r) => r.conversationId === conv._id)?.lastReadMessage;
-        const messages = await ctx.db
-          .query("messages")
-          .withIndex("by_conversation_createdAt", (q) => q.eq("conversationId", conv._id))
-          .collect();
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const reads = await ctx.db
+      .query("messageReads")
+      .withIndex("by_user_conversation", (q) => q.eq("userId", userId))
+      .collect();
+
+    const conversations = await ctx.db.query("conversations").collect();
+
+    const result: Record<string, number> = {};
+
+    for (const conv of conversations) {
+      const lastRead = reads.find(
+        (r) => r.conversationId === conv._id
+      )?.lastReadMessage;
+      const messages = await ctx.db
+        .query("messages")
+        .withIndex("by_conversation_createdAt", (q) =>
+          q.eq("conversationId", conv._id)
+        )
+        .order("asc")
+        .collect();
 
       const unreadCount = messages.filter(
-        (m) => m.senderId !== userId && (!lastRead || m._id.toString() > lastRead.toString())
+        (m) =>
+          m.senderId !== userId &&
+          (!lastRead ||
+            m.createdAt >
+              messages.find((msg) => msg._id === lastRead)?.createdAt!)
       ).length;
 
       result[conv.conversationKey] = unreadCount;
-        }
-    
-        return result;
-    },
-  });
+    }
+
+    return result;
+  },
+});

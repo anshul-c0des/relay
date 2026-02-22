@@ -23,6 +23,7 @@ export const createOrGetConversation = mutation({
       participants: sorted,
       isGroup: false,
       conversationKey,
+      lastMessageAt: Date.now()
     });
   },
 });
@@ -30,10 +31,17 @@ export const createOrGetConversation = mutation({
 export const getUserConversations = query({
   args: { userId: v.id("users") },
   async handler(ctx, args) {
-    const conversations = await ctx.db.query("conversations").collect();
+    const conversations = (await ctx.db.query("conversations").collect());
 
-    return conversations.filter((conv) =>
-      conv.participants.includes(args.userId)
-    );
+    return conversations
+      .filter((conv) => conv.participants.includes(args.userId))
+      .sort((a, b) => (b.lastMessageAt ?? 0) - (a.lastMessageAt ?? 0));
+  },
+});
+
+export const getConversationById = query({
+  args: { conversationId: v.id("conversations") },
+  async handler(ctx, { conversationId }) {
+    return await ctx.db.get(conversationId);
   },
 });

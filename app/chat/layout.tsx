@@ -33,7 +33,7 @@ useEffect(() => {
   // initial
   sendHeartbeat();
 
-  const interval = setInterval(sendHeartbeat, 15000);
+  const interval = setInterval(sendHeartbeat, 2000);
 
   return () => {
     isMounted = false;

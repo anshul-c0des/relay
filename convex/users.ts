@@ -51,7 +51,7 @@ export const getUsers = query({
       .filter((u) => u._id !== currentUser._id)
       .filter((u) =>
         args.search
-          ? u.name.toLowerCase().includes(args.search.toLowerCase())
+          ? (u.name.toLowerCase().includes(args.search.toLowerCase()) || u.email.toLowerCase().includes(args.search.toLowerCase()))
           : true
       );
   },

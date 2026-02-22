@@ -16,7 +16,10 @@ export default defineSchema({
   conversations: defineTable({
     participants: v.array(v.id("users")),
     isGroup: v.boolean(),
-    conversationKey: v.string(), 
+    conversationKey: v.string(),
+    lastMessageAt: v.number(),
+    lastMessagePreview: v.optional(v.string()),
+    lastMessageSenderId: v.optional(v.id("users")),
   }).index("by_conversationKey", ["conversationKey"]),
 
   messages: defineTable({

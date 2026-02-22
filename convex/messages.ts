@@ -8,11 +8,22 @@ export const sendMessage = mutation({
     content: v.string(),
   },
   async handler(ctx, args) {
-    return await ctx.db.insert("messages", {
+    const messageId = await ctx.db.insert("messages", {
       ...args,
       createdAt: Date.now(),
       isDeleted: false
     });
+
+    await ctx.db.patch(args.conversationId, {
+      lastMessageAt: Date.now(),
+      lastMessagePreview:
+        args.content.length > 80
+          ? args.content.slice(0, 80) + "..."
+          : args.content,
+      lastMessageSenderId: args.senderId,
+    });
+
+    return messageId;
   },
 });
 

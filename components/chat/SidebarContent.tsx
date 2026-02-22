@@ -8,17 +8,28 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTimestamp } from "@/lib/timeStamps";
+import { useDebounce } from "use-debounce";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Doc } from "@/convex/_generated/dataModel";
 
 export function SidebarContent() {
   const { user } = useUser();
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [debouncedSearch] = useDebounce(search, 300);
 
   // Fetch all other users
   const users = useQuery(
     api.users.getUsers,
-    user ? { clerkId: user.id, search } : "skip"
-  ) ?? [];
+    user ? { clerkId: user.id, search: debouncedSearch } : "skip"
+  );
 
   const currentUser = useQuery(
     api.users.getCurrentUser,
@@ -31,12 +42,13 @@ export function SidebarContent() {
   );
 
   // Fetch unread counts (returns { [conversationId]: number })
-  const unreadCounts = useQuery(
-    api.messages.getUnreadCounts,
-    currentUser ? { userId: currentUser._id } : "skip"
-  ) ?? {};
+  const unreadCounts =
+    useQuery(
+      api.messages.getUnreadCounts,
+      currentUser ? { userId: currentUser._id } : "skip"
+    ) ?? {};
 
-  if (!users || !currentUser) {
+  if (!currentUser) {
     return (
       <div className="p-4 space-y-4">
         <Skeleton className="h-10 w-full rounded-md" />
@@ -45,20 +57,40 @@ export function SidebarContent() {
     );
   }
 
-  // Simple online check
-  const isOnline = (u: typeof users[number]) =>
-    u.lastSeen ? Date.now() - u.lastSeen < 2000 : false; 
+  const isOnline = (u: Doc<"users">) =>
+    u.lastSeen ? Date.now() - u.lastSeen < 2000 : false;
+
+  const isTyping = search !== debouncedSearch;
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="border-b p-4 flex justify-between items-center">
         <h1 className="text-lg font-semibold">Chats</h1>
-        <SignOutButton>
-          <button className="text-gray-600 bg-red-300 underline">
-            Log out
-          </button>
-        </SignOutButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 rounded-full focus:outline-none">
+              <img
+                src={user?.imageUrl}
+                alt={user?.fullName ?? "User"}
+                className="h-8 w-8 rounded-full"
+              />
+            </button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel>
+              Hi, {user?.firstName ?? "User"} 👋
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            <SignOutButton>
+              <DropdownMenuItem className="cursor-pointer text-red-500">
+                Log out
+              </DropdownMenuItem>
+            </SignOutButton>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Search */}
@@ -72,15 +104,29 @@ export function SidebarContent() {
 
       {/* User List */}
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
-        {users.length === 0 ? (
+        {/* Typing (debounce delay) */}
+        {isTyping && (
+          <div className="text-sm text-muted-foreground text-center mt-10">
+            Searching...
+          </div>
+        )}
+
+        {/* Loaded but empty */}
+        {!isTyping && users && users.length === 0 && (
           <div className="text-sm text-muted-foreground text-center mt-10">
             No users found.
           </div>
-        ) : (
+        )}
+
+        {!isTyping &&
+          users &&
+          users.length > 0 &&
           users.map((u) => {
             // get the conversation ID for this user
-            const convId = currentUser ? `${[currentUser._id, u._id].sort().join("_")}` : null;
-            const unreadCount = convId ? unreadCounts[convId] ?? 0 : 0;
+            const convId = currentUser
+              ? `${[currentUser._id, u._id].sort().join("_")}`
+              : null;
+            const unreadCount = convId ? (unreadCounts[convId] ?? 0) : 0;
             // Get conversation ID dynamically on click
             const handleClick = async () => {
               const conversationId = await createConversation({
@@ -120,14 +166,13 @@ export function SidebarContent() {
 
                 {/* Unread badge */}
                 {unreadCount > 0 && (
-  <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white">
-    {unreadCount}
-  </span>
-)}
+                  <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
             );
-          })
-        )}
+          })}
       </div>
     </div>
   );

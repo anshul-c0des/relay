@@ -154,6 +154,18 @@ export default function ConversationPage() {
                       isOwn ? "right-full mr-2" : "left-full ml-2"
                     }`}
                   >
+                    {isOwn && (
+                      <button
+                        className="text-sm px-2 rounded bg-red-100 text-red-600"
+                        onClick={(e) => {
+                          softDeleteMessage({
+                            messageId: msg._id as Id<"messages">,
+                          });
+                        }}
+                      >
+                        🗑 Delete
+                      </button>
+                    )}
                     {["👍", "❤️", "😂", "😮", "😢"].map((emoji) => {
                       const hasReacted = msgReactions.find(
                         (r) => r.emoji === emoji
@@ -165,7 +177,6 @@ export default function ConversationPage() {
                             hasReacted ? "bg-gray-300" : "bg-white"
                           }`}
                           onClick={(e) => {
-                            e.stopPropagation(); // prevent closing menu
                             toggleReaction({
                               messageId: msg._id,
                               userId: currentUser._id,
@@ -177,20 +188,6 @@ export default function ConversationPage() {
                         </button>
                       );
                     })}
-
-                    {isOwn && (
-                      <button
-                        className="text-sm px-2 rounded bg-red-100 text-red-600"
-                        onClick={(e) => {
-                          e.stopPropagation(); // prevent closing reaction menu
-                          softDeleteMessage({
-                            messageId: msg._id as Id<"messages">,
-                          });
-                        }}
-                      >
-                        🗑 Delete
-                      </button>
-                    )}
                   </div>
                 )}
               </div>

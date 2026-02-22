@@ -21,18 +21,25 @@ const currentUser = useQuery(
 const updateLastSeen = useMutation(api.users.updateLastSeen);
 
 useEffect(() => {
-  if (!currentUser) return;
+  if (!currentUser?._id) return;
 
-  // Immediately mark active
-  updateLastSeen({ userId: currentUser._id });
+  let isMounted = true;
 
-  // Heartbeat every 15 seconds
-  const interval = setInterval(() => {
+  const sendHeartbeat = () => {
+    if (!isMounted) return;
     updateLastSeen({ userId: currentUser._id });
-  }, 15000);
+  };
 
-  return () => clearInterval(interval);
-}, [currentUser, updateLastSeen]);
+  // initial
+  sendHeartbeat();
+
+  const interval = setInterval(sendHeartbeat, 15000);
+
+  return () => {
+    isMounted = false;
+    clearInterval(interval);
+  };
+}, [currentUser?._id, updateLastSeen]);
 
 
   return (

@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatTimestamp } from "@/lib/timeStamps";
 import { useDebounce } from "use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, LogOut } from "lucide-react";
+import { Search, LogOut, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -22,6 +22,7 @@ import {
 import { Doc } from "@/convex/_generated/dataModel";
 import { DarkModeToggle } from "../DarkModeToggle";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 
 export function SidebarContent() {
   const { user, isLoaded: clerkLoaded } = useUser();
@@ -111,7 +112,7 @@ export function SidebarContent() {
   }
 
   const isOnline = (u: Doc<"users">) =>
-    u.lastSeen ? Date.now() - u.lastSeen < 10000 : false;
+    u.lastSeen ? Date.now() - u.lastSeen < 2000 : false;
   const isSearching = search !== debouncedSearch;
 
   return (
@@ -181,6 +182,9 @@ export function SidebarContent() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 h-11 bg-background/40 border-border/50 focus-visible:ring-primary/30 focus-visible:border-primary/50 rounded-xl transition-all"
           />
+          {search.trim() &&
+          <Button className="h-8 w-8 absolute right-1 top-1/2 -translate-y-1/2 bg-transparent hover:bg-primary/10 rounded-full" onClick={()=>setSearch("")}><X className="w-3 h-3 text-primary" /></Button>
+          }
         </div>
       </div>
 

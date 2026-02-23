@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Relay | Real Time Communication",
   description: "app that makes communication effortless",
+  icons: {
+    icon: "/logo.png"
+  }
 };
 
 export default function RootLayout({

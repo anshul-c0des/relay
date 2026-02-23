@@ -19,6 +19,15 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
+html, body {
+  height: 100%;
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  overflow-y: hidden; /* Prevent vertical scrolling */
+}
+
+
 @layer base {
   :root {
     --radius: 0.625rem;

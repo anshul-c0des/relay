@@ -121,39 +121,43 @@ export default function ConversationPage() {
   // LOADING STATE (Skeletons)
   if (!currentUser || !messages || !conversation) {
     return (
-      <div className="flex flex-col h-full bg-background overflow-hidden">
-  
+      <div className="flex flex-col h-full bg-card/50 overflow-hidden">
         {/* Header Skeleton */}
-        <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3">
-          <Skeleton className="h-10 w-10 rounded-full" />
+        <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3 bg-background/80">
+          <Skeleton className="h-10 w-10 rounded-full bg-primary/10 animate-pulse" />
           <div className="space-y-2">
-            <Skeleton className="h-4 w-24 rounded-md" />
-            <Skeleton className="h-3 w-16 rounded-md" />
+            <Skeleton className="h-4 w-24 rounded-md bg-primary/5" />
+            <Skeleton className="h-3 w-16 rounded-md bg-primary/5 opacity-80" />
           </div>
         </div>
   
         {/* Messages Skeleton */}
-        <div className="flex-1 p-4 space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
+        <div className="flex-1 p-4 space-y-8">
+          {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}
+              className={cn(
+                "flex flex-col gap-2",
+                i % 2 === 0 ? "items-end" : "items-start"
+              )}
             >
               <Skeleton
                 className={cn(
-                  "h-12 rounded-2xl",
-                  i % 2 === 0 ? "w-2/3" : "w-1/2"
+                  "h-10 rounded-2xl bg-primary/5 animate-pulse",
+                  i % 2 === 0 ? "w-[40%] rounded-tr-none" : "w-[30%] rounded-tl-none"
                 )}
               />
+              {/* Skeleton for the timestamp zone to prevent layout jump */}
+              <Skeleton className="h-2 w-12 rounded bg-primary/5 opacity-30" />
             </div>
           ))}
         </div>
   
         {/* Input Skeleton */}
-        <div className="p-4">
+        <div className="p-4 border-t border-white/5">
           <div className="flex items-center gap-2">
-            <Skeleton className="h-10 flex-1 rounded-xl" />
-            <Skeleton className="h-10 w-10 rounded-xl" />
+            <Skeleton className="h-12 flex-1 rounded-2xl bg-primary/5" />
+            <Skeleton className="h-12 w-12 rounded-2xl bg-muted/20" />
           </div>
         </div>
       </div>
@@ -221,12 +225,10 @@ export default function ConversationPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 key={msg._id}
                 onClick={() =>
-                  setActiveMessageId((prev) =>
-                    prev === msg._id ? null : msg._id
-                  )
+                  setActiveMessageId((prev) => (prev === msg._id ? null : msg._id))
                 }
                 className={cn(
-                  "group flex flex-col relative max-w-[85%] md:max-w-[70%]",
+                  "group flex flex-col relative max-w-[85%] md:max-w-[70%] pb-6", // Added fixed pb-6 for the "utility zone"
                   isOwn ? "ml-auto items-end" : "items-start"
                 )}
               >
@@ -238,73 +240,61 @@ export default function ConversationPage() {
                 >
                   <div
                     className={cn(
-                      "relative rounded-2xl px-3 py-2.5 text-sm shadow-sm transition-all duration-200",
+                      "relative rounded-2xl px-3 py-2.5 text-sm shadow-md transition-all duration-200",
                       isOwn
                         ? "bg-primary text-white rounded-tr-none"
-                        : "bg-card/90 border border-white/5 text-gray-900 dark:text-gray-200 rounded-tl-none",
+                        : "bg-card border border-white/5 text-heading rounded-tl-none",
                       msg.isDeleted && "opacity-50 italic"
                     )}
                   >
                     {msg.isDeleted ? "This message was deleted" : msg.content}
-
-                    {/* Reaction Display */}
+            
+                    {/* Reaction Display - Centered slightly better */}
                     {msgReactions.length > 0 && (
                       <div
                         className={cn(
-                          "absolute -bottom-3 flex gap-1 rounded-full bg-white border border-white/10 p-0.5 px-1.5 shadow-lg",
+                          "absolute -bottom-3 flex gap-1 rounded-full bg-muted border border-white/10 p-0.5 px-1.5 shadow-md",
                           isOwn ? "right-2" : "left-2"
                         )}
                       >
                         {msgReactions.map((r) => (
-                          <span
-                            key={r.emoji}
-                            className="text-[10px] text-primary flex items-center gap-0.5"
-                          >
-                            {r.emoji}{" "}
-                            <span className="font-medium">{r.count}</span>
+                          <span key={r.emoji} className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                            {r.emoji} <span className="font-bold">{r.count}</span>
                           </span>
                         ))}
                       </div>
                     )}
                   </div>
-
-                  {/* 🟣 Subtle Action Bar (Hover only) */}
+            
+                  {/* Action Bar */}
                   {!msg.isDeleted && activeMessageId === msg._id && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center gap-1 bg-background/50 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-xl"
+                      className="flex items-center gap-1 bg-background/80 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-xl"
                     >
                       {["👍", "❤️", "😂", "😢", "😯"].map((emoji) => (
                         <button
                           key={emoji}
-                          onClick={() =>
-                            toggleReaction({
-                              messageId: msg._id,
-                              userId: currentUser._id,
-                              emoji,
-                            })
-                          }
-                          className="p-1 rounded-full transition-colors text-sm active:scale-90"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleReaction({ messageId: msg._id, userId: currentUser._id, emoji });
+                            setActiveMessageId(null);
+                          }}
+                          className="p-1 rounded-full transition-colors text-sm hover:bg-white/10"
                         >
                           {emoji}
                         </button>
                       ))}
-                      {isOwn && (
-                        <button
-                          onClick={() =>
-                            softDeleteMessage({ messageId: msg._id })
-                          }
-                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
-                        >
-                          <Trash2 size={15} strokeWidth={1.5} />
-                        </button>
-                      )}
                     </motion.div>
                   )}
                 </div>
-
-                <span className="mt-1 text-[10px] dark:text-gray-400 font-medium uppercase tracking-wider text-muted-foreground/80 px-1">
+            
+                {/* Timestamp - Now Absolutely Positioned at the bottom of the pb-6 zone */}
+                <span className={cn(
+                  "absolute bottom-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1",
+                  isOwn ? "right-0" : "left-0"
+                )}>
                   {formatTimestamp(msg._creationTime)}
                 </span>
               </motion.div>
@@ -348,7 +338,7 @@ export default function ConversationPage() {
         target.style.height = target.scrollHeight + "px";
       }}
       placeholder="Relay a message..."
-      className="flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] max-h-32 text-sm leading-relaxed custom-scrollbar"
+      className="flex-1 resize-none border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] max-h-32 text-sm leading-relaxed custom-scrollbar"
     />
 
     {/* Send Button */}
@@ -372,7 +362,7 @@ export default function ConversationPage() {
       className={cn(
         "h-10 w-10 rounded-xl transition-all duration-300 shrink-0",
         message.trim()
-          ? "bg-primary hover:scale-105 active:scale-95 shadow-md"
+          ? "bg-primary hover:scale-110 active:scale-105 shadow-md"
           : "bg-muted opacity-50"
       )}
     >

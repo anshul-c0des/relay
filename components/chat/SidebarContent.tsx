@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -25,11 +25,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 
 export function SidebarContent() {
-  const { user, isLoaded: clerkLoaded } = useUser();
+  const { user, isLoaded: clerkLoaded } = useUser(); // fetches current user and user loading state from clerk
   const router = useRouter();
   const pathname = usePathname();
-  const [search, setSearch] = useState("");
-  const [debouncedSearch] = useDebounce(search, 400);
+  const [search, setSearch] = useState(""); // searching users by name/email
+  const [debouncedSearch] = useDebounce(search, 400); // debounced search - 4ms
 
   // Use local state for instant highlighting, fallback to pathname on mount
   const [selectedConvId, setSelectedConvId] = useState<string | null>(
@@ -37,36 +37,38 @@ export function SidebarContent() {
   );
 
   // Convex Queries
-  const currentUser = useQuery(
+
+  const currentUser = useQuery(   // fetches current user from conve3x
     api.users.getCurrentUser,
     user ? { clerkId: user.id } : "skip"
   );
-  const users = useQuery(
+  const users = useQuery(   // fetches all users OR searched users
     api.users.getUsers,
     user ? { clerkId: user.id, search: debouncedSearch } : "skip"
   );
-  const conversations = useQuery(
+  const conversations = useQuery(   // fetch user conversations
     api.conversations.getUserConversations,
     currentUser ? { userId: currentUser._id } : "skip"
   );
-  const unreadCounts =
+  const unreadCounts =   // fetch conversation unread count
     useQuery(
       api.messages.getUnreadCounts,
       currentUser ? { userId: currentUser._id } : "skip"
     ) ?? {};
-
-  const createConversation = useMutation(
+  const createConversation = useMutation(   // creates a new conversation
     api.conversations.createOrGetConversation
   );
 
-  const sortedUsers = useMemo(() => {
+  // Functions
+
+  const sortedUsers = useMemo(() => {   // sorts user sin sidebar
     if (!users || !conversations || !currentUser) return [];
 
-    const activeChatUserIds = conversations.map((conv) =>
+    const activeChatUserIds = conversations.map((conv) =>   // 1. shows users with existing conversations
       conv.participants.find((id) => id !== currentUser._id)
     );
 
-    const activeUsers = activeChatUserIds
+    const activeUsers = activeChatUserIds   // 2. shows users with unread messages
       .map((id) => users.find((u) => u._id === id))
       .filter((u): u is Doc<"users"> => !!u)
       .sort((a, b) => {
@@ -87,11 +89,11 @@ export function SidebarContent() {
     );
 
     return [...activeUsers, ...otherUsers];
-  }, [users, conversations, currentUser, unreadCounts]); // Added unreadCounts as dependency
+  }, [users, conversations, currentUser, unreadCounts]);
 
-  const isLoading = !clerkLoaded || currentUser === undefined;
+  const isLoading = !clerkLoaded || currentUser === undefined;   // loading state for skeleton loader
 
-  if (isLoading) {
+  if (isLoading) {   // skeleton loader
     return (
       <div className="flex flex-col h-full bg-card/50 p-6 space-y-6 border-r border-border/50">
         <div className="flex justify-between items-center">
@@ -111,10 +113,8 @@ export function SidebarContent() {
     );
   }
 
-  const isOnline = (u: Doc<"users">) =>
-    u.lastSeen ? Date.now() - u.lastSeen < 3000 : false;
-  
-  const isSearching = search !== debouncedSearch;
+  const isOnline = (u: Doc<"users">) => u.lastSeen ? Date.now() - u.lastSeen < 3000 : false;   // check is user is Online - 3sec
+  const isSearching = search !== debouncedSearch;   // searching loading state
 
   return (
     <motion.div
@@ -183,9 +183,14 @@ export function SidebarContent() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 h-11 bg-background/40 border-border/50 focus-visible:ring-primary/30 focus-visible:border-primary/50 rounded-xl transition-all"
           />
-          {search.trim() &&
-          <Button className="h-8 w-8 absolute right-1 top-1/2 -translate-y-1/2 bg-transparent hover:bg-primary/10 rounded-full" onClick={()=>setSearch("")}><X className="w-3 h-3 text-primary" /></Button>
-          }
+          {search.trim() && (
+            <Button
+              className="h-8 w-8 absolute right-1 top-1/2 -translate-y-1/2 bg-transparent hover:bg-primary/10 rounded-full"
+              onClick={() => setSearch("")}
+            >
+              <X className="w-3 h-3 text-primary" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -303,11 +308,22 @@ export function SidebarContent() {
                           : "text-subheading"
                       )}
                     >
-                      {conversation?.lastMessageSenderId === currentUser?._id
-                        ? "You: "
-                        : ""}
-                      {conversation?.lastMessagePreview ??
-                        "Start a conversation"}
+                      {conversation?.lastMessagePreview === "del_mes" ? (
+                        <span className="italic opacity-60">
+                          This message was deleted
+                        </span>
+                      ) : (
+                        <>
+                          <span className="font-medium">
+                            {conversation?.lastMessageSenderId ===
+                            currentUser?._id
+                              ? "You: "
+                              : ""}
+                          </span>
+                          {conversation?.lastMessagePreview ??
+                            "Start a conversation"}
+                        </>
+                      )}
                     </p>
                     {!online && (
                       <span className="text-[11px] text-muted-foreground font-medium">

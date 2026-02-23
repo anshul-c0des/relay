@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Relay - Real-time Messaging App
 
-## Getting Started
+Relay is a fast, real-time one-on-one messaging application. Built with modern web technologies, this app provides a seamless chat experience with features like real-time updates, typing indicators, message reactions, and more.
 
-First, run the development server:
+## 🌐 [Live Demo](https://relay-dusky.vercel.app)
 
+## 📋 Features
+- Authentication: Secure sign-up and login via Clerk.
+- Real-time Messaging: Instant message sending and receiving.
+- User List & Search: Browse and search users by name.
+- Private Conversations: Start and manage one-on-one chats.
+- Typing Indicators: See when a user is typing.
+- Online Presence: Live updates of user online/offline status.
+- Message Timestamps: Display messages with context-aware timestamps (today, same year, different year).
+- Unread Message Count: Sidebar displays unread message counts for each conversation.
+- Smart Auto-scroll: Auto-scroll to new messages, with a “New messages” button when scrolled up.
+- Message Deletion (Soft Delete): Option to delete your own messages with a placeholder.
+- Message Reactions: React to messages with emojis and view reaction counts.
+
+## 🛠️ Tech Stack
+- Frontend:
+    - Next.js (App Router)
+    - TypeScript
+    - Tailwind CSS (Mobile-first design)
+    - shadcn/ui (UI components)
+
+-Backend:
+    - Convex (Database + Backend + Real-time)
+    - Clerk (Authentication)
+
+## ⚙️ Setup
+
+1. Clone the Repo:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/anshul-c0des/relay
+cd relay
+```
+2. Install Dependencies:
+```bash
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Configure Environment Variables:
+Create a .env.local file in the root of the project and add the following variables:
+```bash
+CONVEX_DEPLOYMENT=<Your Convex Deployment>
+NEXT_PUBLIC_CONVEX_URL=<Your Convex URL>
+NEXT_PUBLIC_CONVEX_SITE_URL=<Your Convex Site URL>
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<Your Clerk Publishable Key>
+CLERK_SECRET_KEY=<Your Clerk Secret Key>
+```
+4. Run Locally:
+```bash
+npm run dev
+```
+Visit http://localhost:3000
+ to view the app in action.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🗂️ Project Structure
+- **/app** - Contains the app's pages and routing logic.
+- **/components** - UI components like message bubbles, conversation list, and search bar.
+- **/convex** - Backend logic, database schema, and real-time subscriptions using Convex.
+- **/lib** - Utilities for tasks like timestamp formatting, auto-scroll management, etc.

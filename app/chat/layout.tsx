@@ -11,34 +11,37 @@ export default function ChatLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useUser();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { user } = useUser();   // fetch user from clerk
+  const containerRef = useRef<HTMLDivElement>(null);   // refrence to the main wrapper
 
-  const currentUser = useQuery(
+  // Convex
+
+  const currentUser = useQuery(   // fetch current user from convex
     api.users.getCurrentUser,
     user ? { clerkId: user.id } : "skip"
   );
+  const updateLastSeen = useMutation(api.users.updateLastSeen);   // update last seen of current user
 
-  const updateLastSeen = useMutation(api.users.updateLastSeen);
+  // Side effects
 
-  useEffect(() => {
+  useEffect(() => {   // handles keyboard layout behavior for smalll devices
     const handleViewportChange = () => {
       if (!window.visualViewport || !containerRef.current) return;
 
-      const vvHeight = window.visualViewport.height;
+      const vvHeight = window.visualViewport.height;   // calculate actual visible height
       containerRef.current.style.height = `${vvHeight}px`;
 
-      window.scrollTo(0, 0);
+      window.scrollTo(0, 0);   // forces to bottom, prevent layout shift
     };
 
     const v = window.visualViewport;
-    if (v) {
+    if (v) {   // listens to keyboard opening or scrolling
       v.addEventListener("resize", handleViewportChange);
       v.addEventListener("scroll", handleViewportChange);
-      handleViewportChange();
+      handleViewportChange();   // runs on mount to set initial height
     }
 
-    return () => {
+    return () => {   // cleanup listeners
       if (v) {
         v.removeEventListener("resize", handleViewportChange);
         v.removeEventListener("scroll", handleViewportChange);
@@ -47,16 +50,16 @@ export default function ChatLayout({
   }, []);
 
   // --- Presence Heartbeat ---
-  useEffect(() => {
+  useEffect(() => {   // sends a ping every 5sec to update last seen
     if (!currentUser?._id) return;
     let isMounted = true;
-    const sendHeartbeat = () => {
+    const sendHeartbeat = () => {   // updates last seen
       if (!isMounted) return;
       updateLastSeen({ userId: currentUser._id });
     };
     sendHeartbeat();
-    const interval = setInterval(sendHeartbeat, 5000);
-    return () => {
+    const interval = setInterval(sendHeartbeat, 5000);   // 5sec interval
+    return () => {   // cleanup
       isMounted = false;
       clearInterval(interval);
     };
@@ -73,9 +76,7 @@ export default function ChatLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-0 relative">
-        {children}
-      </main>
+      <main className="flex-1 flex flex-col min-h-0 relative">{children}</main>
     </div>
   );
 }

@@ -16,48 +16,47 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function ConversationPage() {
-  const { user } = useUser();
+  const { user } = useUser();   // fetches user from clerk
   const params = useParams();
-  const conversationId = params.conversationId as Id<"conversations">;
+  const conversationId = params.conversationId as Id<"conversations">;   // extracts conversationId from params
   const router = useRouter();
 
-  const [message, setMessage] = useState("");
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const [hasNewMessages, setHasNewMessages] = useState(false);
-  const [activeMessageId, setActiveMessageId] = useState<Id<"messages"> | null>(
-    null
-  );
+  const [message, setMessage] = useState("");   // message state
+  const [isAtBottom, setIsAtBottom] = useState(true);   // tracks whether at bottom for scroll
+  const [hasNewMessages, setHasNewMessages] = useState(false);   // tracks whether new message arrived
+  const [activeMessageId, setActiveMessageId] = useState<Id<"messages"> | null>(null);   // tracks active conversation
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);   // refrence to message ending
+  const messagesContainerRef = useRef<HTMLDivElement>(null);   // refrence to message container
 
-  // Queries
-  const currentUser = useQuery(
+  // Convex Queries
+
+  const currentUser = useQuery(   // fetches current user form convex
     api.users.getCurrentUser,
     user ? { clerkId: user.id } : "skip"
   );
-  const messages = useQuery(
+  const messages = useQuery(   // fetches conversation messages
     api.messages.getMessages,
     conversationId ? { conversationId } : "skip"
   );
-  const reactions =
-    useQuery(
-      api.reactions.getMessageReactions,
-      conversationId ? { conversationId } : "skip"
-    ) ?? {};
-  const conversation = useQuery(
+  const reactions = useQuery(   // fetches message reaction
+    api.reactions.getMessageReactions,
+    conversationId ? { conversationId } : "skip"
+  ) ?? {};
+  const conversation = useQuery(   // fetches specific conversation
     api.conversations.getConversationById,
     conversationId ? { conversationId } : "skip"
   );
-  const usersResult =
-    useQuery(
-      api.users.getUsers,
-      currentUser
-        ? { clerkId: currentUser.clerkId, search: undefined }
-        : { clerkId: "" }
-    ) ?? [];
+  const usersResult = useQuery(   // fetches all users
+    api.users.getUsers,
+    currentUser
+      ? { clerkId: currentUser.clerkId, search: undefined }
+      : { clerkId: "" }
+  ) ?? [];
 
-  const otherUser = useMemo(() => {
+  
+
+  const otherUser = useMemo(() => {   // identifies other user from all users
     if (!conversation || !currentUser) return null;
     return usersResult.find(
       (u) =>
@@ -65,24 +64,24 @@ export default function ConversationPage() {
     );
   }, [conversation, currentUser, usersResult]);
 
-  const isOnline = (lastSeen?: number) =>
-    lastSeen ? Date.now() - lastSeen < 3000 : false;
+  const isOnline = (lastSeen?: number) => lastSeen ? Date.now() - lastSeen < 3000 : false;   // online satus - 3sec interval
 
-  const online = otherUser ? isOnline(otherUser.lastSeen) : false;
+  const online = otherUser ? isOnline(otherUser.lastSeen) : false;   // calculates online status by lastSeen
 
-  // Mutations
-  const markRead = useMutation(api.messages.markRead);
-  const sendMessage = useMutation(api.messages.sendMessage);
-  const sendTyping = useMutation(api.typing.setTyping);
-  const toggleReaction = useMutation(api.reactions.toggleReaction);
-  const softDeleteMessage = useMutation(api.messages.softDeleteMessage);
+  // Convex Mutations
+  
+  const markRead = useMutation(api.messages.markRead);   // marks messages as read
+  const sendMessage = useMutation(api.messages.sendMessage);   // sends a new message
+  const sendTyping = useMutation(api.typing.setTyping);   // typing status
+  const toggleReaction = useMutation(api.reactions.toggleReaction);   // toggle reaction on a messsage
+  const softDeleteMessage = useMutation(api.messages.softDeleteMessage);   // deletes a message
 
-  const debouncedTyping = useDebouncedCallback(() => {
+  const debouncedTyping = useDebouncedCallback(() => {   // debounced status for typing - 3ms
     if (!currentUser) return;
     sendTyping({ conversationId, userId: currentUser._id });
   }, 300);
 
-  const typingUsers =
+  const typingUsers =   // fetches users who are typing
     useQuery(
       api.typing.getTypingUsers,
       currentUser && conversationId
@@ -90,26 +89,26 @@ export default function ConversationPage() {
         : "skip"
     ) ?? [];
 
-  const scrollToBottom = () => {
+  const scrollToBottom = () => {   // scroll to bottom of messages
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     setIsAtBottom(true);
-    setHasNewMessages(false);
+    setHasNewMessages(false);   // sets message as read
   };
 
-  const handleScroll = () => {
+  const handleScroll = () => {   // handles scroll operation
     if (!messagesContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } =
       messagesContainerRef.current;
     setIsAtBottom(scrollTop + clientHeight >= scrollHeight - 50);
   };
 
-  useEffect(() => {
+  useEffect(() => {   // scroll to bottom on opening a conversation
     if (!messages) return;
     if (isAtBottom) scrollToBottom();
     else setHasNewMessages(true);
   }, [messages]);
 
-  useEffect(() => {
+  useEffect(() => {   // marks all messages as read on opening a conversation
     if (!currentUser || !messages) return;
     markRead({ conversationId, userId: currentUser._id });
   }, [messages, currentUser, conversationId, markRead]);
@@ -118,7 +117,7 @@ export default function ConversationPage() {
   if (!currentUser || !messages || !conversation) {
     return (
       <div className="flex flex-col h-full bg-card/50 overflow-hidden">
-        {/* Header Skeleton */}
+        {/* Header */}
         <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3 bg-background/80">
           <Skeleton className="h-10 w-10 rounded-full bg-primary/10 animate-pulse" />
           <div className="space-y-2">
@@ -127,7 +126,7 @@ export default function ConversationPage() {
           </div>
         </div>
 
-        {/* Messages Skeleton */}
+        {/* Messages */}
         <div className="flex-1 p-4 space-y-8">
           {[1, 2, 3, 4].map((i) => (
             <div
@@ -145,13 +144,12 @@ export default function ConversationPage() {
                     : "w-[30%] rounded-tl-none"
                 )}
               />
-              {/* Skeleton for the timestamp zone to prevent layout jump */}
               <Skeleton className="h-2 w-12 rounded bg-primary/5 opacity-30" />
             </div>
           ))}
         </div>
 
-        {/* Input Skeleton */}
+        {/* Input */}
         <div className="p-4 border-t border-white/5">
           <div className="flex items-center gap-2">
             <Skeleton className="h-12 flex-1 rounded-2xl bg-primary/5" />
@@ -164,7 +162,7 @@ export default function ConversationPage() {
 
   return (
     <div className="flex h-full flex-col bg-background text-foreground overflow-hidden">
-      {/* 🟣 Header */}
+      {/* Header */}
       <header className="z-10 flex items-center justify-between border-b shadow-sm border-white/5 bg-background/80 px-4 py-2 sm:py-3 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <Button
@@ -206,7 +204,7 @@ export default function ConversationPage() {
         </div>
       </header>
 
-      {/* 🟣 Message Area */}
+      {/* Message Area */}
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
@@ -228,7 +226,7 @@ export default function ConversationPage() {
                   )
                 }
                 className={cn(
-                  "group flex flex-col relative max-w-[85%] md:max-w-[70%] pb-6", // Added fixed pb-6 for the "utility zone"
+                  "group flex flex-col relative max-w-[85%] md:max-w-[70%] pb-6",
                   isOwn ? "ml-auto items-end" : "items-start"
                 )}
               >
@@ -249,7 +247,7 @@ export default function ConversationPage() {
                   >
                     {msg.isDeleted ? "This message was deleted" : msg.content}
 
-                    {/* Reaction Display - Centered slightly better */}
+                    {/* Reaction Display */}
                     {msgReactions.length > 0 && (
                       <div
                         className={cn(
@@ -277,7 +275,7 @@ export default function ConversationPage() {
                       animate={{ opacity: 1, scale: 1 }}
                       className="flex items-center gap-1 bg-background/80 backdrop-blur-md border border-white/10 rounded-full px-2 p-1 shadow-xl"
                     >
-                      {["👍", "❤️", "😂", "😢", "😯"].map((emoji) => (
+                      {["👍", "👎", "❤️", "😂", "😢", "😯"].map((emoji) => (
                         <button
                           key={emoji}
                           onClick={(e) => {
@@ -295,22 +293,22 @@ export default function ConversationPage() {
                         </button>
                       ))}
                       {isOwn && (
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              softDeleteMessage({ messageId: msg._id });
-                            }}
-                            variant="ghost"
-                            className="text-red-500 h-6 w-6 cursor-pointer hover:bg-red-100 rounded-full"
-                          >
-                            <Trash2 size={15} />
-                          </Button>
-                        )}
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            softDeleteMessage({ messageId: msg._id });
+                          }}
+                          variant="ghost"
+                          className="text-red-500 h-6 w-6 cursor-pointer hover:bg-red-100 rounded-full"
+                        >
+                          <Trash2 size={15} />
+                        </Button>
+                      )}
                     </motion.div>
                   )}
                 </div>
 
-                {/* Timestamp - Now Absolutely Positioned at the bottom of the pb-6 zone */}
+                {/* Timestamp */}
                 <span
                   className={cn(
                     "absolute bottom-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1",
@@ -326,7 +324,7 @@ export default function ConversationPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 🟣 Floating Scroll Down Button */}
+      {/* Floating Scroll Down Button */}
       <AnimatePresence>
         {!isAtBottom && hasNewMessages && (
           <motion.button
@@ -342,7 +340,7 @@ export default function ConversationPage() {
         )}
       </AnimatePresence>
 
-      {/* 🟣 Input Section */}
+      {/* Input Section */}
       <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-2">
         <div className="relative flex items-end gap-3 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md p-2 shadow-sm transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-md">
           {/* Input */}

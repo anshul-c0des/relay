@@ -6,15 +6,18 @@ import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const DarkModeToggle = () => {
-  const [isDark, setIsDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);   // state to track current theme
+  const [mounted, setMounted] = useState(false);   // tracks mounting of theme
 
   // Sync with system and localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    
-    const shouldBeDark = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+
+    const shouldBeDark =
+      savedTheme === "dark" || (!savedTheme && systemPrefersDark);
     setIsDark(shouldBeDark);
 
     if (shouldBeDark) document.documentElement.classList.add("dark");
@@ -22,7 +25,7 @@ export const DarkModeToggle = () => {
     setMounted(true);
   }, []);
 
-  const setTheme = (dark: boolean) => {
+  const setTheme = (dark: boolean) => {   // toggles theme
     setIsDark(dark);
     if (dark) {
       document.documentElement.classList.add("dark");

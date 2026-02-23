@@ -5,7 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
-export function UserSync() {
+export function UserSync() {   // sync clerk's user with convex
   const { user, isLoaded } = useUser();
   const syncUser = useMutation(api.users.syncUser);
 

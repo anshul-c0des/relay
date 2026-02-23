@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import {Providers} from "./providers"
+import { Providers } from "./providers";
 import { UserSync } from "./userSync";
 
 const geistSans = Geist({
@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   title: "Relay | Real Time Communication",
   description: "app that makes communication effortless",
   icons: {
-    icon: "/logo.png"
-  }
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({

@@ -20,13 +20,20 @@
 }
 
 html, body {
-  height: 100%;
-  margin: 0; /* Remove default margin */
-  padding: 0; /* Remove default padding */
-  overflow-x: hidden; /* Prevent horizontal scrolling */
-  overflow-y: hidden; /* Prevent vertical scrolling */
-}
+  /* Change height to 100dvh to handle dynamic mobile bars */
+  height: 100dvh; 
+  margin: 0;
+  padding: 0;
+  
+  /* CRITICAL: Prevent the browser from scrolling the 'page' 
+     so only your chat container scrolls */
+  overflow: hidden; 
+  position: fixed; 
+  width: 100%;
 
+  touch-action: none; 
+  -webkit-overflow-scrolling: touch;
+}
 
 @layer base {
   :root {
@@ -70,6 +77,11 @@ html, body {
   body {
     @apply bg-background text-foreground antialiased;
   }
+}
+
+.custom-scrollbar {
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

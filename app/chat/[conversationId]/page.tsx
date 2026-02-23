@@ -9,14 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Id } from "@/convex/_generated/dataModel";
 import { formatTimestamp } from "@/lib/timeStamps";
 import { useDebouncedCallback } from "use-debounce";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ArrowLeft,
-  SendHorizontal,
-  Trash2,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowLeft, SendHorizontal, Trash2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,7 +24,9 @@ export default function ConversationPage() {
   const [message, setMessage] = useState("");
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [hasNewMessages, setHasNewMessages] = useState(false);
-  const [activeMessageId, setActiveMessageId] = useState<Id<"messages"> | null>(null);
+  const [activeMessageId, setActiveMessageId] = useState<Id<"messages"> | null>(
+    null
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +66,7 @@ export default function ConversationPage() {
   }, [conversation, currentUser, usersResult]);
 
   const isOnline = (lastSeen?: number) =>
-    lastSeen ? Date.now() - lastSeen < 2000 : false;
+    lastSeen ? Date.now() - lastSeen < 3000 : false;
 
   const online = otherUser ? isOnline(otherUser.lastSeen) : false;
 
@@ -130,7 +126,7 @@ export default function ConversationPage() {
             <Skeleton className="h-3 w-16 rounded-md bg-primary/5 opacity-80" />
           </div>
         </div>
-  
+
         {/* Messages Skeleton */}
         <div className="flex-1 p-4 space-y-8">
           {[1, 2, 3, 4].map((i) => (
@@ -144,7 +140,9 @@ export default function ConversationPage() {
               <Skeleton
                 className={cn(
                   "h-10 rounded-2xl bg-primary/5 animate-pulse",
-                  i % 2 === 0 ? "w-[40%] rounded-tr-none" : "w-[30%] rounded-tl-none"
+                  i % 2 === 0
+                    ? "w-[40%] rounded-tr-none"
+                    : "w-[30%] rounded-tl-none"
                 )}
               />
               {/* Skeleton for the timestamp zone to prevent layout jump */}
@@ -152,7 +150,7 @@ export default function ConversationPage() {
             </div>
           ))}
         </div>
-  
+
         {/* Input Skeleton */}
         <div className="p-4 border-t border-white/5">
           <div className="flex items-center gap-2">
@@ -167,13 +165,13 @@ export default function ConversationPage() {
   return (
     <div className="flex h-full flex-col bg-background text-foreground overflow-hidden">
       {/* 🟣 Header */}
-      <header className="z-10 flex items-center justify-between border-b shadow-sm border-white/5 bg-background/80 px-4 py-3 backdrop-blur-xl">
+      <header className="z-10 flex items-center justify-between border-b shadow-sm border-white/5 bg-background/80 px-4 py-2 sm:py-3 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => router.push("/chat")}
-            className="md:hidden text-muted-foreground bg-primary/10 rounded-full"
+            className="md:hidden h-6 w-6 text-muted-foreground bg-primary/10 rounded-full"
           >
             <ArrowLeft size={20} strokeWidth={1.5} />
           </Button>
@@ -181,17 +179,17 @@ export default function ConversationPage() {
             <img
               src={otherUser?.imageUrl}
               alt=""
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-primary/20"
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover ring-2 ring-primary/20"
             />
             {online && (
               <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-emerald-500" />
             )}{" "}
           </div>
           <div>
-            <h2 className="text-md font-semibold text-primary leading-tight">
+            <h2 className="text-sm sm:text-md mt-1 font-semibold text-primary leading-tight">
               {otherUser?.name ?? "Anonymous"}
             </h2>
-            <p className="text-[11px] text-muted-foreground mt-1">
+            <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground mt-1">
               {typingUsers.length > 0 ? (
                 <span className="text-primary animate-pulse italic">
                   typing...
@@ -225,7 +223,9 @@ export default function ConversationPage() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 key={msg._id}
                 onClick={() =>
-                  setActiveMessageId((prev) => (prev === msg._id ? null : msg._id))
+                  setActiveMessageId((prev) =>
+                    prev === msg._id ? null : msg._id
+                  )
                 }
                 className={cn(
                   "group flex flex-col relative max-w-[85%] md:max-w-[70%] pb-6", // Added fixed pb-6 for the "utility zone"
@@ -248,7 +248,7 @@ export default function ConversationPage() {
                     )}
                   >
                     {msg.isDeleted ? "This message was deleted" : msg.content}
-            
+
                     {/* Reaction Display - Centered slightly better */}
                     {msgReactions.length > 0 && (
                       <div
@@ -258,43 +258,65 @@ export default function ConversationPage() {
                         )}
                       >
                         {msgReactions.map((r) => (
-                          <span key={r.emoji} className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                            {r.emoji} <span className="font-bold">{r.count}</span>
+                          <span
+                            key={r.emoji}
+                            className="text-[10px] text-muted-foreground flex items-center gap-0.5"
+                          >
+                            {r.emoji}{" "}
+                            <span className="font-bold">{r.count}</span>
                           </span>
                         ))}
                       </div>
                     )}
                   </div>
-            
+
                   {/* Action Bar */}
                   {!msg.isDeleted && activeMessageId === msg._id && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center gap-1 bg-background/80 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-xl"
+                      className="flex items-center gap-1 bg-background/80 backdrop-blur-md border border-white/10 rounded-full px-2 p-1 shadow-xl"
                     >
                       {["👍", "❤️", "😂", "😢", "😯"].map((emoji) => (
                         <button
                           key={emoji}
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleReaction({ messageId: msg._id, userId: currentUser._id, emoji });
+                            toggleReaction({
+                              messageId: msg._id,
+                              userId: currentUser._id,
+                              emoji,
+                            });
                             setActiveMessageId(null);
                           }}
-                          className="p-1 rounded-full transition-colors text-sm hover:bg-white/10"
+                          className="p-0.5 rounded-full transition-colors cursor-pointer text-md hover:bg-muted/30"
                         >
                           {emoji}
                         </button>
                       ))}
+                      {isOwn && (
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              softDeleteMessage({ messageId: msg._id });
+                            }}
+                            variant="ghost"
+                            className="text-red-500 h-6 w-6 cursor-pointer hover:bg-red-100 rounded-full"
+                          >
+                            <Trash2 size={15} />
+                          </Button>
+                        )}
                     </motion.div>
                   )}
                 </div>
-            
+
                 {/* Timestamp - Now Absolutely Positioned at the bottom of the pb-6 zone */}
-                <span className={cn(
-                  "absolute bottom-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1",
-                  isOwn ? "right-0" : "left-0"
-                )}>
+                <span
+                  className={cn(
+                    "absolute bottom-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1",
+                    isOwn ? "right-0" : "left-0"
+                  )}
+                >
                   {formatTimestamp(msg._creationTime)}
                 </span>
               </motion.div>
@@ -321,55 +343,54 @@ export default function ConversationPage() {
       </AnimatePresence>
 
       {/* 🟣 Input Section */}
-      <div className="px-4 pb-5 pt-2">
-  <div className="relative flex items-end gap-3 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md p-3 shadow-sm transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-md">
+      <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-2">
+        <div className="relative flex items-end gap-3 rounded-2xl border border-border/50 bg-background/70 backdrop-blur-md p-2 shadow-sm transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-md">
+          {/* Input */}
+          <Textarea
+            value={message}
+            rows={1}
+            onChange={(e) => {
+              setMessage(e.target.value);
+              debouncedTyping();
+            }}
+            onInput={(e) => {
+              const target = e.currentTarget;
+              target.style.height = "auto";
+              target.style.height = target.scrollHeight + "px";
+            }}
+            placeholder="Relay a message..."
+            className="flex-1 resize-none border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] max-h-32 text-sm leading-relaxed custom-scrollbar"
+          />
 
-    {/* Input */}
-    <Textarea
-      value={message}
-      rows={1}
-      onChange={(e) => {
-        setMessage(e.target.value);
-        debouncedTyping();
-      }}
-      onInput={(e) => {
-        const target = e.currentTarget;
-        target.style.height = "auto";
-        target.style.height = target.scrollHeight + "px";
-      }}
-      placeholder="Relay a message..."
-      className="flex-1 resize-none border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] max-h-32 text-sm leading-relaxed custom-scrollbar"
-    />
+          {/* Send Button */}
+          <Button
+            size="icon"
+            disabled={!message.trim()}
+            onClick={async () => {
+              if (!message.trim()) return;
 
-    {/* Send Button */}
-    <Button
-      size="icon"
-      disabled={!message.trim()}
-      onClick={async () => {
-        if (!message.trim()) return;
+              const content = message;
+              setMessage("");
 
-        const content = message;
-        setMessage("");
+              await sendMessage({
+                conversationId,
+                senderId: currentUser._id,
+                content,
+              });
 
-        await sendMessage({
-          conversationId,
-          senderId: currentUser._id,
-          content,
-        });
-
-        scrollToBottom();
-      }}
-      className={cn(
-        "h-10 w-10 rounded-xl transition-all duration-300 shrink-0",
-        message.trim()
-          ? "bg-primary hover:scale-110 active:scale-105 shadow-md"
-          : "bg-muted opacity-50"
-      )}
-    >
-      <SendHorizontal size={18} strokeWidth={2.2} />
-    </Button>
-  </div>
-</div>
+              scrollToBottom();
+            }}
+            className={cn(
+              "h-10 w-10 rounded-xl transition-all duration-300 shrink-0",
+              message.trim()
+                ? "bg-primary hover:scale-110 active:scale-105 shadow-md"
+                : "bg-muted opacity-50"
+            )}
+          >
+            <SendHorizontal size={18} strokeWidth={2.2} />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

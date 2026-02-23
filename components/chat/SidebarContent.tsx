@@ -112,7 +112,8 @@ export function SidebarContent() {
   }
 
   const isOnline = (u: Doc<"users">) =>
-    u.lastSeen ? Date.now() - u.lastSeen < 2000 : false;
+    u.lastSeen ? Date.now() - u.lastSeen < 3000 : false;
+  
   const isSearching = search !== debouncedSearch;
 
   return (
@@ -189,7 +190,7 @@ export function SidebarContent() {
       </div>
 
       {/* --- USER LIST --- */}
-      <div className="flex-1 overflow-y-auto px-4 space-y-2 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto px-2.5 sm:px-4 space-y-1.5 scrollbar-hide">
         <AnimatePresence mode="popLayout">
           {isSearching ? (
             <motion.div
@@ -258,7 +259,7 @@ export function SidebarContent() {
                     }
                   }}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all relative border border-transparent group cursor-pointer",
+                    "flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-all relative border border-transparent group cursor-pointer",
                     isSelected
                       ? "bg-primary/15 border-primary/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
                       : "hover:bg-primary/5 hover:border-primary/10"
@@ -276,10 +277,10 @@ export function SidebarContent() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-0.25">
+                    <div className="flex justify-between items-baseline">
                       <p
                         className={cn(
-                          "font-semibold truncate transition-colors",
+                          "font-semibold truncate transition-colors text-md",
                           isSelected
                             ? "text-primary"
                             : "text-heading group-hover:text-primary"

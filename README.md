@@ -7,10 +7,10 @@ Relay is a fast, real-time one-on-one messaging application. Built with modern w
 ## 📋 Features
 - Authentication: Secure sign-up and login via Clerk.
 - Real-time Messaging: Instant message sending and receiving.
-- User List & Search: Browse and search users by name.
+- User List & Search: Browse and search users by name or email.
 - Private Conversations: Start and manage one-on-one chats.
 - Typing Indicators: See when a user is typing.
-- Online Presence: Live updates of user online/offline status.
+- Online Presence: Live updates of user online/offline status (heartbeat).
 - Message Timestamps: Display messages with context-aware timestamps (today, same year, different year).
 - Unread Message Count: Sidebar displays unread message counts for each conversation.
 - Smart Auto-scroll: Auto-scroll to new messages, with a “New messages” button when scrolled up.
